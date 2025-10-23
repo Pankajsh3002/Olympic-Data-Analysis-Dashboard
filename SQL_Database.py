@@ -45,7 +45,7 @@ create_table_query =f"""CREATE TABLE IF NOT EXISTS {table_name} (
 cursor.execute(create_table_query)
 print(f"Table '{table_name}' is ready.")
 
-
+#cursor.execute(f"TRUNCATE TABLE {table_name}")
 #inserting data form csv to sql table
 data_to_insert = [tuple(row) for row in df.itertuples(index=False)]
 
