@@ -1,67 +1,61 @@
 import mysql.connector
 import pandas as pd
+import numpy as np
 
 mydb = mysql.connector.connect(
-    host="localhost",      
-    user="root",           
-    password="9811052565", 
+    host="Localhost",
+    user="root",
+    password="9811052565"
 )
-
 if mydb.is_connected():
-    print("Connection to the database was successful!")
+    print("Connected to the database successfully!")
 
 cursor=mydb.cursor()
+cursor.execute("CREATE DATABASE IF NOT EXISTS Olympic_Games_History")
+print("Created Database 'Olympic_Games_History' Successfully")
+cursor.execute("USE Olympic_Games_History")
+
+#Getting Data from csv file
+data_path=r"D:\Projects\Web-Application\Dataset\Olympic History.csv"
+df=pd.read_csv(data_path,sep=",")
+
+#Data Cleaning
+#dropping where Age, Height, Weight is null
+df.dropna(subset=['Age','Height', 'Weight'], inplace=True)
+df['Sex']=df['Sex'].replace({'M':'Male','F':'Female'})
+
+table_name="olympic_history"
+create_table_query =f"""CREATE TABLE IF NOT EXISTS {table_name} (
+    ID INT,
+    Name VARCHAR(255),
+    Sex CHAR(10),
+    Age INT,
+    Height INT,
+    Weight INT,
+    Team VARCHAR(100),
+    NOC CHAR(3),
+    Games VARCHAR(100),
+    Year INT,
+    Season VARCHAR(20),
+    City VARCHAR(100),
+    Sport VARCHAR(100),
+    Event VARCHAR(100),
+    Medal VARCHAR(20)
+)"""
+cursor.execute(create_table_query)
+print(f"Table '{table_name}' is ready.")
 
 
-#Creating Database 
-cursor.execute("CREATE DATABASE IF NOT EXISTS company_db")
-print("Database 'company_db' Created Successfully")
+#inserting data form csv to sql table
+data_to_insert = [tuple(row) for row in df.itertuples(index=False)]
 
-# Listing all databases
-# cursor.execute("SHOW DATABASES")
-# for db in cursor:
-#     print(db)
-
-cursor.execute("USE company_db")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS employees (
-    emp_id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    department VARCHAR(50),
-    salary DECIMAL(10,2),
-    hire_date DATE
-)
-""")
-
-print(" Table 'employees' ready to use!")
-
-query = """
-INSERT INTO employees (first_name, last_name, department, salary, hire_date)
-VALUES (%s, %s, %s, %s, %s)
+sql = f"""
+INSERT INTO {table_name} (ID,Name,Sex,Age,Height,Weight,Team,NOC,Games,Year,Season,City,Sport,Event,Medal) 
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
-values = [
-    ("Pankaj", "Sharma", "Finance", 50000.00, "2023-03-12"),
-    ("Amit", "Verma", "IT", 60000.00, "2022-10-01"),
-    ("Neha", "Singh", "HR", 45000.00, "2024-01-18"),
-    ("Rohit", "Kumar", "Sales", 55000.00, "2021-07-25"),
-    ("Riya", "Mehta", "HR", 47000.00, "2024-07-10"),
-    ("Deepak", "Yadav", "Operations", 52000.00, "2020-12-05"),
-    ("Karan", "Patel", "IT", 65000.00, "2022-05-14"),
-    ("Sneha", "Goyal", "Finance", 48000.00, "2023-08-22"),
-    ("Vikram", "Nair", "Sales", 57000.00, "2021-11-09"),
-    ("Priya", "Raj", "Marketing", 53000.00, "2022-02-17")
-]
-
-cursor.executemany(query, values)
+# Execute the insert in one go
+cursor.executemany(sql, data_to_insert)
+# Commit the Changes
 mydb.commit()
-
-print(f"{cursor.rowcount} records inserted successfully!")
-
-
-cursor.execute("SELECT * FROM employees")
-row=cursor.fetchall()
-df=pd.DataFrame(row,columns=[desc[0] for desc in cursor.description])
-df.to_excel("employeee_data.xlsx",index=False)
+print(f"{cursor.rowcount} records were inserted into the '{table_name}' table.")
