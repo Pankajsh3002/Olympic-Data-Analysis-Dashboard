@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import mysql.connector
+from sqlalchemy import create_engine
 import plotly.express as px
 
 # --- Page Configuration ---
@@ -10,21 +10,15 @@ st.set_page_config(page_title="Olympic Games Analysis", layout="wide")
 @st.cache_data(ttl=600) # Cache data for 10 minutes
 def fetch_data():
     try:
-        mydb = mysql.connector.connect(
-            host="Localhost",
-            user="root",
-            password="Working@123data", 
-            database="Olympic_Games_History"
-        )
+        engine = create_engine("mysql+pymysql://root:Working123data@localhost/Olympic_Games_History")
         # Using a SQL query to fetch all data from the table
-        df = pd.read_sql("SELECT * FROM olympic_history", mydb)
-        mydb.close()
+        df = pd.read_sql("SELECT * FROM olympic_history", engine)
         
         # The 'Medal' column contains 'NA' for non-medalists. We'll replace it.
-        df['Medal'].fillna('No Medal', inplace=True)
+        df['Medal'] = df['Medal'].fillna('No Medal')
         
         return df
-    except mysql.connector.Error as err:
+    except Exception as err:
         st.error(f"Error connecting to MySQL: {err}")
         return pd.DataFrame() # Return an empty DataFrame on error
 

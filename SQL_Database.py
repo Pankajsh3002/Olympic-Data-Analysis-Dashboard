@@ -5,7 +5,7 @@ import numpy as np
 mydb = mysql.connector.connect(
     host="Localhost",
     user="root",
-    password="9811052565"
+    password="Working123data"
 )
 if mydb.is_connected():
     print("Connected to the database successfully!")
