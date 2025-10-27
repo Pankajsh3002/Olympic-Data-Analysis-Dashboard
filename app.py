@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 import plotly.express as px
 
-# --- Page Configuration ---
+# --- Page Configuration --
 st.set_page_config(page_title="Olympic Games Analysis", layout="wide")
 
 # --- Database Connection and Data Fetching ---
